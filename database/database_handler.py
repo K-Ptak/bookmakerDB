@@ -1,12 +1,13 @@
 import mysql.connector
+from security.decryption import decrypt_value
 
 
 class DatabasePointer:
     def __init__(self):
         f = open("storage/credentials.txt", "r")
-        credentials = []
-        for x in f:
-            credentials.append(x)
+        data = f.readline()
+        data = decrypt_value(data, "storage/enckey.key")
+        credentials = data.decode().split('\r\n')
 
     @staticmethod
     def mysql_connect(credentials):
@@ -17,3 +18,6 @@ class DatabasePointer:
             database=credentials[3]
         )
         return mydb
+
+
+k = DatabasePointer()
