@@ -1,7 +1,7 @@
 from cryptography.fernet import Fernet
 
 
-def encrypt_file(filename):
+def encrypt_to_file(filename):
     with open('database/storage/enckey.key', 'rb') as enckey:
         key = enckey.read()
     fernet = Fernet(key)
@@ -13,3 +13,10 @@ def encrypt_file(filename):
 
     with open(filename, 'wb') as encrypted_file:
         encrypted_file.write(encrypted)
+
+
+def encrypt_value(value):
+    with open('database/storage/enckey.key', 'rb') as enckey:
+        key = enckey.read()
+    fernet = Fernet(key)
+    return fernet.encrypt(value)
