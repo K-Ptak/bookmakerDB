@@ -1,8 +1,8 @@
 from cryptography.fernet import Fernet
 
 
-def decrypt_to_file(filename):
-    with open('database/storage/enckey.key', 'rb') as enckey:
+def decrypt_to_file(filename, path):
+    with open(path, 'rb') as enckey:
         key = enckey.read()
     fernet = Fernet(key)
 
@@ -15,8 +15,10 @@ def decrypt_to_file(filename):
         dec_file.write(decrypted)
 
 
-def decrypt_value(value):
-    with open('database/storage/enckey.key', 'rb') as enckey:
+def decrypt_value(value, path):
+    with open(path, 'rb') as enckey:
         key = enckey.read()
     fernet = Fernet(key)
-    return fernet.decrypt(value)
+    decrypted = fernet.decrypt(value)
+
+    return decrypted
