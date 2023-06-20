@@ -1,18 +1,36 @@
 import tkinter as tk
 from tkinter import messagebox
+from view.registration import *
+from database.database_handler import DatabasePointer
 
 # Tworzenie głównego okna aplikacji
 root = tk.Tk()
 root.title("Zakłady")
 root.geometry("1200x500+35+100")
 
-# Dane tymczasowe do celów demonstracyjnych
-# Zastąp je odpowiednimi danymi z bazy danych
-admin_user = {"username": "admin", "password": "admin"}
-regular_user = {"username": "user", "password": "user"}
+# Pobieranie z bazy danych
+database = DatabasePointer()
+usernames = database.mysql_select("user_login", "user")
+passwords = database.mysql_select("user_password", "user")
+admin_privileges = database.mysql_select("user_admin", "user")
+credentials = {}
+
+for i in range(len(usernames)):
+    login = usernames[i]
+    password = passwords[i]
+    credentials[login] = password
+    is_admin = admin_privileges[i]
+    credentials[login] = {'password': password, 'is_admin': is_admin}
 
 # Aktualnie zalogowany użytkownik
 current_user = None
+
+#funkcja do zwracania okna z blędem
+def login_error():
+    messagebox.showerror("Błąd logowania", "Nieprawidłowy login lub hasło.")
+    username_entry.delete(0, tk.END)
+    password_entry.delete(0, tk.END)
+
 
 # Funkcja do logowania
 def login():
@@ -22,14 +40,21 @@ def login():
     username = username_entry.get()
     password = password_entry.get()
 
-    if username == admin_user["username"] and password == admin_user["password"]:
-        # Zalogowano jako administrator
-        show_admin_panel()
-    elif username == regular_user["username"] and password == regular_user["password"]:
-        # Zalogowano jako zwykły użytkownik
-        show_user_panel()
+    if username in credentials:
+        user_info = credentials[username]
+        password_output = user_info['password']
+        is_admin_output = user_info['is_admin']
+
+        if password == password_output:
+            if is_admin_output:
+                show_admin_panel()
+            else:
+                show_user_panel()
+        else:
+            login_error()
     else:
-        messagebox.showerror("Błąd logowania", "Nieprawidłowy login lub hasło.")
+        login_error()
+
 
 # Funkcja do wylogowywania
 def logout():
@@ -38,15 +63,7 @@ def logout():
     show_login()
 
 # Funkcja do otwierania okna rejestracji
-def open_registration_window():
-    registration_window = tk.Toplevel(root)
-    registration_window.title("Rejestracja")
-    registration_window.geometry("300x200")
 
-    registration_label = tk.Label(registration_window, text="Formularz rejestracji", font=("Arial", 16))
-    registration_label.pack(pady=10)
-
-    # Tutaj możesz dodać pola do rejestracji, przyciski itp.
 
 # Widok logowania
 def show_login():
@@ -72,8 +89,9 @@ def show_login():
     login_button.pack(pady=10)
 
     # Przycisk do otwierania okna rejestracji
-    register_button = tk.Button(root, text="Zarejestruj się", command=open_registration_window)
+    register_button = tk.Button(root, text="Zarejestruj się", command=lambda: open_registration_window(root))
     register_button.pack(side=tk.RIGHT, padx=10, pady=10)
+
 
 # Widok panelu administratora
 def show_admin_panel():
@@ -87,6 +105,7 @@ def show_admin_panel():
     logout_button = tk.Button(root, text="Wyloguj", command=logout)
     logout_button.pack(anchor=tk.SE, padx=10, pady=10)
 
+
 # Widok panelu użytkownika
 def show_user_panel():
     clear_window()
@@ -99,10 +118,12 @@ def show_user_panel():
     logout_button = tk.Button(root, text="Wyloguj", command=logout)
     logout_button.pack(anchor=tk.SE, padx=10, pady=10)
 
+
 # Funkcja do czyszczenia okna
 def clear_window():
     for widget in root.winfo_children():
         widget.destroy()
+
 
 # Wyświetlanie widoku logowania jako domyślnego widoku startowego
 show_login()
