@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import messagebox
 from security.validation import *
 from security.encryption import encrypt_value
+from security.decryption import decrypt_value
 from database.database_handler import DatabasePointer
 
 
@@ -9,31 +10,55 @@ def register():
     if login_entry.get() == "" or password_entry.get() == "" or name_entry.get() == "" or surname_entry.get() == "" or email_entry.get() == "" or phone_entry.get() == "":
         messagebox.showerror("Błąd rejestracji", "Wypełnij wszystkie pola")
     else:
-        if not validate_email(email_entry.get()):
-            messagebox.showerror("Błąd rejestracji", "Adres email jest niepoprawny")
-            email_entry.delete(0, tk.END)
+        database = DatabasePointer
+        usernames = database.mysql_select("user_login", "user")
+        if login_entry.get() in usernames:
+            messagebox.showerror("Błąd rejestracji", "Login jest już zajęty")
+            login_entry.delete(0, tk.END)
+        else:
+            if not validate_email(email_entry.get()):
+                messagebox.showerror("Błąd rejestracji", "Adres email jest niepoprawny")
+                email_entry.delete(0, tk.END)
 
-        if not validate_phone_number(phone_entry.get()):
-            messagebox.showerror("Błąd rejestracji", "Numer telefonu jest niepoprawny")
-            phone_entry.delete(0, tk.END)
+            if not validate_phone_number(phone_entry.get()):
+                messagebox.showerror("Błąd rejestracji", "Numer telefonu jest niepoprawny")
+                phone_entry.delete(0, tk.END)
 
-        if not validate_password(password_entry.get()):
-            messagebox.showerror("Błąd rejestracji",
-                                 "Hasło jest niepoprawne\n(Minimum jedna mała i duża litera, symbol i cyfra. Hasło musi mieć długość minimum 8)")
-            password_entry.delete(0, tk.END)
+            if not validate_password(password_entry.get()):
+                messagebox.showerror("Błąd rejestracji",
+                                     "Hasło jest niepoprawne\n(Minimum jedna mała i duża litera, symbol i cyfra. Hasło musi mieć długość minimum 8)")
+                print(password_entry.get())
+                password_entry.delete(0, tk.END)
 
-        if validate_email(email_entry.get()) and validate_phone_number(phone_entry.get()) and validate_password(
-                password_entry.get()):
-            database = DatabasePointer
-            password = encrypt_value(password_entry.get().encode('utf-8'), "storage/enckey.key")
-            print(password)
-            print(len(password))
-            database.mysql_insert(table="user",
-                                  columns="`user_password`, `user_login`, `user_firstname`, `user_surname`, `user_email`, `user_phone_number`, `user_balance`, `user_admin`",
-                                  values="%s, %s, %s, %s, %s, %s, %s, %s", params=(
-                password, login_entry.get(), name_entry.get(), surname_entry.get(), email_entry.get(),
-                phone_entry.get(), '0', '0'))
-            # messagebox.showerror(decrypt_value(password, "storage/enckey.key"), password) - szyfrowanie dziala
+            if validate_email(email_entry.get()) and validate_phone_number(phone_entry.get()) and validate_password(password_entry.get()):
+                password = encrypt_value(password_entry.get().encode('utf-8'), "storage/enckey.key")
+                print(password)
+                print(len(password))
+                database.mysql_insert(table="user",
+                                      columns="`user_password`, `user_login`, `user_firstname`, `user_surname`, `user_email`, `user_phone_number`, `user_balance`, `user_admin`",
+                                      values="%s, %s, %s, %s, %s, %s, %s, %s", params=(
+                    password, login_entry.get(), name_entry.get(), surname_entry.get(), email_entry.get(),
+                    phone_entry.get(), '0', '0'))
+
+                messagebox.showinfo("Rejestracja", "Rejestracja przeszła pomyślnie!")
+                registration_window.destroy()
+                usernames = database.mysql_select("user_login", "user")
+                passwords = database.mysql_select("user_password", "user")
+                admin_privileges = database.mysql_select("user_admin", "user")
+
+                for p in range(len(passwords)):
+                    temp = decrypt_value(passwords[p], "storage/enckey.key")
+                    temp = temp.decode()
+                    passwords[p] = temp
+
+                credentials = {}
+
+                for i in range(len(usernames)):
+                    login = usernames[i]
+                    password = passwords[i]
+                    is_admin = admin_privileges[i]
+                    credentials[login] = {'password': password, 'is_admin': is_admin}
+                # messagebox.showerror(decrypt_value(password, "storage/enckey.key"), password) - szyfrowanie dziala
 
 
 def clear_fields():
@@ -65,6 +90,7 @@ def open_registration_window(root):
     global surname_entry
     global email_entry
     global phone_entry
+    global registration_window
     registration_window = tk.Toplevel(root)
     registration_window.title("Rejestracja")
     registration_window.geometry("300x400+475+150")
