@@ -24,7 +24,7 @@ class DatabasePointer:
             )
         except:
             print("Cannot connect to database")
-            return None
+            quit()
         else:
             return mydb
 
