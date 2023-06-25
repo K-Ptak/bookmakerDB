@@ -70,7 +70,6 @@ def login():
         user_info = credentials[username]
         password_output = user_info['password']
         is_admin_output = user_info['is_admin']
-
         if password == password_output:
             if is_admin_output:
                 show_admin_panel(username)
@@ -170,24 +169,6 @@ def show_admin_panel(username):
 
     zaklady_inner_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
 
-    zaklady = [
-        ("Gra 1", "Wynik 1", "100", "Wygrany", "2023-06-19"),
-        ("Gra 2", "Wynik 2", "50", "Przegrany", "2023-06-18"),
-        ("Gra 3", "Wynik 3", "200", "Oczekujący", "2023-06-17"),
-        ("Gra 4", "Wynik 4", "150", "Wygrany", "2023-06-16"),
-        ("Gra 5", "Wynik 5", "80", "Przegrany", "2023-06-15"),
-        ("Gra 6", "Wynik 6", "120", "Oczekujący", "2023-06-14"),
-        ("Gra 7", "Wynik 7", "90", "Wygrany", "2023-06-13"),
-        ("Gra 8", "Wynik 8", "70", "Przegrany", "2023-06-12"),
-        ("Gra 9", "Wynik 9", "110", "Oczekujący", "2023-06-11"),
-        ("Gra 10", "Wynik 10", "180", "Wygrany", "2023-06-10")
-    ]
-
-    for zaklad in zaklady:
-        game_name, bet_result, bet_value, bet_status, bet_date = zaklad
-        card = BetCard(zaklady_inner_frame, game_name, bet_value, bet_result, bet_status, bet_date)
-        card.pack(pady=20, fill="x", expand=1)
-
     canvas.update_idletasks()
 
     canvas.configure(scrollregion=canvas.bbox("all"))
@@ -243,7 +224,7 @@ def show_admin_panel(username):
 def show_user_panel(username):
     clear_window()
 
-    user_label = ttk.Label(root, text="Panel użytkkownika", font=("Arial", 16))
+    user_label = ttk.Label(root, text="Panel użytkownika", font=("Arial", 16))
     user_label.pack(pady=10)
 
     left_column = ttk.Frame(root)
@@ -290,25 +271,14 @@ def show_user_panel(username):
     zaklady_inner_frame = ttk.Frame(canvas)
     canvas.create_window((0, 0), window=zaklady_inner_frame, anchor=ttk.NW)
 
-    zaklady_inner_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
+    zaklady_user = database.mysql_select(table="user u",
+                                         column="g.game_name, b.bet_value, sc.score_value, r.result_name, b.bet_created_at",
+                                         conditions=f"JOIN bet b ON u.id = b.user_id JOIN game g ON b.game_id = g.id JOIN score sc ON b.score_id = sc.id JOIN result r ON b.result_id = r.id WHERE u.user_login = '{username}'")
 
-    zaklady = [
-        ("Gra 1", "Wynik 1", "100", "Wygrany", "2023-06-19"),
-        ("Gra 2", "Wynik 2", "50", "Przegrany", "2023-06-18"),
-        ("Gra 3", "Wynik 3", "200", "Oczekujący", "2023-06-17"),
-        ("Gra 4", "Wynik 4", "150", "Wygrany", "2023-06-16"),
-        ("Gra 5", "Wynik 5", "80", "Przegrany", "2023-06-15"),
-        ("Gra 6", "Wynik 6", "120", "Oczekujący", "2023-06-14"),
-        ("Gra 7", "Wynik 7", "90", "Wygrany", "2023-06-13"),
-        ("Gra 8", "Wynik 8", "70", "Przegrany", "2023-06-12"),
-        ("Gra 9", "Wynik 9", "110", "Oczekujący", "2023-06-11"),
-        ("Gra 10", "Wynik 10", "180", "Wygrany", "2023-06-10")
-    ]
-
-    for zaklad in zaklady:
-        game_name, bet_result, bet_value, bet_status, bet_date = zaklad
+    for zaklad in zaklady_user:
+        game_name, bet_value, bet_result, bet_status, bet_date = zaklad
         card = BetCard(zaklady_inner_frame, game_name, bet_value, bet_result, bet_status, bet_date)
-        card.pack(pady=5, fill=ttk.X)
+        card.pack(pady=20, fill="x", expand=1)
 
     canvas.update_idletasks()
 
@@ -338,18 +308,7 @@ def show_user_panel(username):
 
     mecze_inner_frame.bind("<Configure>", lambda e: mecze_canvas.configure(scrollregion=mecze_canvas.bbox("all")))
 
-    mecze = [
-        ("Match 1", "Zespół 1", "Zespół 2", "Kraj", "Miasto", "Dyscyplina", "Data"),
-        ("Match 2", "Zespół 1", "Zespół 2", "Kraj", "Miasto", "Dyscyplina", "Data"),
-        ("Match 3", "Zespół 1", "Zespół 2", "Kraj", "Miasto", "Dyscyplina", "Data"),
-        ("Match 4", "Zespół 1", "Zespół 2", "Kraj", "Miasto", "Dyscyplina", "Data"),
-        ("Match 5", "Zespół 1", "Zespół 2", "Kraj", "Miasto", "Dyscyplina", "Data"),
-        ("Match 6", "Zespół 1", "Zespół 2", "Kraj", "Miasto", "Dyscyplina", "Data"),
-        ("Match 7", "Zespół 1", "Zespół 2", "Kraj", "Miasto", "Dyscyplina", "Data"),
-        ("Match 8", "Zespół 1", "Zespół 2", "Kraj", "Miasto", "Dyscyplina", "Data"),
-        ("Match 9", "Zespół 1", "Zespół 2", "Kraj", "Miasto", "Dyscyplina", "Data"),
-        ("Match 10", "Zespół 1", "Zespół 2", "Kraj", "Miasto", "Dyscyplina", "Data")
-    ]
+    mecze = database.mysql_select(table="game g", column="g.game_name, t1.team_name AS team1_name, t2.team_name AS team2_name, c.country_name, ci.city_name, d.discipline_name, g.game_date", conditions=f"JOIN game_team gt1 ON g.id = gt1.game_id JOIN game_team gt2 ON g.id = gt2.game_id AND gt1.team_id != gt2.team_id JOIN team t1 ON gt1.team_id = t1.id JOIN team t2 ON gt2.team_id = t2.id JOIN country c ON g.country_id = c.id JOIN city ci ON g.city_id = ci.id JOIN discipline d ON g.discipline_id = d.id")
 
     # Dodawanie kart meczów
     for mecz in mecze:

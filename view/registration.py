@@ -30,13 +30,10 @@ def register():
             if not validate_password(password_entry.get()):
                 messagebox.showerror("Błąd rejestracji",
                                      "Hasło jest niepoprawne\n(Minimum jedna mała i duża litera, symbol i cyfra. Hasło musi mieć długość minimum 8)")
-                print(password_entry.get())
                 password_entry.delete(0, ttk.END)
 
             if validate_email(email_entry.get()) and validate_phone_number(phone_entry.get()) and validate_password(password_entry.get()):
                 password = encrypt_value(password_entry.get().encode('utf-8'), "storage/enckey.key")
-                print(password)
-                print(len(password))
                 database.mysql_insert(table="user",
                                       columns="`user_password`, `user_login`, `user_firstname`, `user_surname`, `user_email`, `user_phone_number`, `user_balance`, `user_admin`",
                                       values="%s, %s, %s, %s, %s, %s, %s, %s", params=(
