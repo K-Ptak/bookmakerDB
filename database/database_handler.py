@@ -54,6 +54,17 @@ class DatabasePointer:
         else:
             return "mysql_insert Error!"
 
+    @staticmethod
+    def mysql_update(table, values, conditions):
+        if table and values and values and conditions:
+            dbcursor = DatabasePointer.db.cursor()
+            query = f"UPDATE {table} SET {values} WHERE {conditions}"
+            dbcursor.execute(query)
+            DatabasePointer.db.commit()
+            return "Insert operation successful"
+        else:
+            return "mysql_insert Error!"
+
 # k = DatabasePointer()
 # print(k.mysql_select(column="id", table="user", conditions="where id=1"))
 # print(k.mysql_select(column="id", table="user"))
