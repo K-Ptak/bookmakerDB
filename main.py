@@ -1,8 +1,9 @@
-import ttkbootstrap as ttk
-from ttkbootstrap import Style, OUTLINE, INFO
+from ttkbootstrap import Style, OUTLINE, INFO, WARNING
 from model.betcard import BetCard
 from model.matchcard import MatchCard
 from view.registration import *
+from database.admin_panel_logic import show_add_player_window, show_add_discipline_window, show_add_country_window, \
+    show_add_city_window, show_add_score_window, show_add_game_window, show_add_team_window
 from database.admin_privilege_handler import show_add_privilege_window, show_del_privilege_window
 
 # Tworzenie głównego okna aplikacji
@@ -146,78 +147,32 @@ def show_admin_panel(username):
     logout_button.pack(side=ttk.BOTTOM, padx=(750, 0), pady=(0, 20))
 
     middle_column = ttk.Frame(root)
-    middle_column.pack(side=ttk.LEFT, padx=50)
+    middle_column.pack(side=ttk.RIGHT, padx=(0, 400))
 
-    zaklady_label = ttk.Label(middle_column, text="Lista zakładów:")
-    zaklady_label.pack(anchor=ttk.W, pady=(0, 10))
+    middle_label = ttk.Label(middle_column, text="Zarządzanie bazą:")
+    middle_label.pack(anchor=ttk.W, pady=(0, 10))
 
-    # Dodanie przewijania do listy zakładów
-    zaklady_frame = ttk.Frame(middle_column, relief=ttk.SOLID)
-    zaklady_frame.pack(fill=ttk.BOTH, expand=1)
+    # Create a container frame for the buttons
+    buttons_frame = ttk.Frame(middle_column)
+    buttons_frame.pack()
 
-    canvas = ttk.Canvas(zaklady_frame)
-    canvas.pack(side=ttk.LEFT, fill=ttk.BOTH, expand=1)
+    # Create the buttons for the desired layout
+    city_button = ttk.Button(buttons_frame, text="Dodaj miasto", width=25, padding=20, bootstyle=OUTLINE, command=lambda: show_add_city_window(root))
+    country_button = ttk.Button(buttons_frame, text="Dodaj państwo", width=25, padding=20, bootstyle=OUTLINE, command=lambda: show_add_country_window(root))
+    discipline_button = ttk.Button(buttons_frame, text="Dodaj dyscypline", width=25, padding=20, bootstyle=OUTLINE, command=lambda: show_add_discipline_window(root))
+    team_button = ttk.Button(buttons_frame, text="Dodaj drużynę", width=25, padding=20, bootstyle=OUTLINE, command=lambda: show_add_team_window(root))
+    player_button = ttk.Button(buttons_frame, text="Dodaj zawodnika", width=25, padding=20, bootstyle=OUTLINE, command=lambda: show_add_player_window(root))
+    game_button = ttk.Button(buttons_frame, text="Dodaj mecz", width=55, padding=20, bootstyle=(WARNING, OUTLINE), command=lambda: show_add_game_window(root))
+    score_button = ttk.Button(buttons_frame, text="Ogłoś wynik meczu", width=55, padding=20, bootstyle=(SUCCESS, OUTLINE), command=lambda: show_add_score_window(root))
 
-    scrollbar = ttk.Scrollbar(zaklady_frame, orient=ttk.VERTICAL, command=canvas.yview)
-    scrollbar.pack(side=ttk.RIGHT, fill=ttk.Y)
-
-    canvas.configure(yscrollcommand=scrollbar.set)
-    canvas.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
-
-    zaklady_inner_frame = ttk.Frame(canvas)
-    canvas.create_window((0, 0), window=zaklady_inner_frame, anchor=ttk.NW)
-
-    zaklady_inner_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
-
-    canvas.update_idletasks()
-
-    canvas.configure(scrollregion=canvas.bbox("all"))
-
-    right_column = ttk.Frame(root)
-    right_column.pack(side=ttk.LEFT)
-
-    mecze_label = ttk.Label(right_column, text="Lista meczy:")
-    mecze_label.pack(anchor=ttk.W, pady=(0, 10))
-
-    # Dodanie przewijania do listy meczów
-    mecze_frame = ttk.Frame(right_column, relief=ttk.SOLID)
-    mecze_frame.pack(fill=ttk.BOTH, expand=True)
-
-    mecze_canvas = ttk.Canvas(mecze_frame)
-    mecze_canvas.pack(side=ttk.LEFT, fill=ttk.BOTH, expand=True)
-
-    mecze_scrollbar = ttk.Scrollbar(mecze_frame, orient=ttk.VERTICAL, command=mecze_canvas.yview)
-    mecze_scrollbar.pack(side=ttk.RIGHT, fill=ttk.Y)
-
-    mecze_canvas.configure(yscrollcommand=mecze_scrollbar.set)
-    mecze_canvas.bind("<Configure>", lambda e: mecze_canvas.configure(scrollregion=mecze_canvas.bbox("all")))
-
-    mecze_inner_frame = ttk.Frame(mecze_canvas)
-    mecze_canvas.create_window((0, 0), window=mecze_inner_frame, anchor=ttk.NW)
-
-    mecze_inner_frame.bind("<Configure>", lambda e: mecze_canvas.configure(scrollregion=mecze_canvas.bbox("all")))
-
-    mecze = [
-        ("Match 1", "Zespół 1", "Zespół 2", "Kraj", "Miasto", "Dyscyplina", "Data"),
-        ("Match 2", "Zespół 1", "Zespół 2", "Kraj", "Miasto", "Dyscyplina", "Data"),
-        ("Match 3", "Zespół 1", "Zespół 2", "Kraj", "Miasto", "Dyscyplina", "Data"),
-        ("Match 4", "Zespół 1", "Zespół 2", "Kraj", "Miasto", "Dyscyplina", "Data"),
-        ("Match 5", "Zespół 1", "Zespół 2", "Kraj", "Miasto", "Dyscyplina", "Data"),
-        ("Match 6", "Zespół 1", "Zespół 2", "Kraj", "Miasto", "Dyscyplina", "Data"),
-        ("Match 7", "Zespół 1", "Zespół 2", "Kraj", "Miasto", "Dyscyplina", "Data"),
-        ("Match 8", "Zespół 1", "Zespół 2", "Kraj", "Miasto", "Dyscyplina", "Data"),
-        ("Match 9", "Zespół 1", "Zespół 2", "Kraj", "Miasto", "Dyscyplina", "Data"),
-        ("Match 10", "Zespół 1", "Zespół 2", "Kraj", "Miasto", "Dyscyplina", "Data")
-    ]
-
-    # Dodawanie kart meczów
-    for mecz in mecze:
-        match_name, team_1, team_2, country, city, discipline, date = mecz
-        card = MatchCard(mecze_inner_frame, match_name, team_1, team_2, country, city, discipline, date)
-        card.pack(pady=20, fill=ttk.X)
-
-    mecze_canvas.update_idletasks()
-    mecze_canvas.configure(scrollregion=mecze_canvas.bbox("all"))
+    # Grid layout for the buttons
+    city_button.grid(row=0, column=0, padx=5, pady=5, sticky="w")
+    country_button.grid(row=0, column=1, padx=5, pady=5, sticky="w")
+    discipline_button.grid(row=0, column=2, rowspan=2, padx=5, pady=5, sticky="w")
+    team_button.grid(row=1, column=0, padx=5, pady=5, sticky="w")
+    player_button.grid(row=1, column=1, padx=5, pady=5, sticky="w")
+    game_button.grid(row=2, column=0, columnspan=3, padx=5, pady=5, sticky="w")
+    score_button.grid(row=5, column=0, columnspan=3, padx=5, pady=100, sticky="w")
 
 
 # Widok panelu użytkkownika
