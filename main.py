@@ -1,9 +1,10 @@
-from ttkbootstrap import Style, OUTLINE, INFO, WARNING
+from ttkbootstrap import Style, OUTLINE, INFO, WARNING, SECONDARY
 from model.betcard import BetCard
 from model.matchcard import MatchCard
 from view.registration import *
 from database.admin_panel_logic import show_add_player_window, show_add_discipline_window, show_add_country_window, \
-    show_add_city_window, show_add_score_window, show_add_game_window, show_add_team_window
+    show_add_city_window, show_add_score_window, show_add_game_window, show_add_team_window, \
+    show_add_team_player_window, show_add_game_team_window
 from database.admin_privilege_handler import show_add_privilege_window, show_del_privilege_window
 
 # Tworzenie głównego okna aplikacji
@@ -157,12 +158,17 @@ def show_admin_panel(username):
     buttons_frame.pack()
 
     # Create the buttons for the desired layout
-    city_button = ttk.Button(buttons_frame, text="Dodaj miasto", width=25, padding=20, bootstyle=OUTLINE, command=lambda: show_add_city_window(root))
-    country_button = ttk.Button(buttons_frame, text="Dodaj państwo", width=25, padding=20, bootstyle=OUTLINE, command=lambda: show_add_country_window(root))
-    discipline_button = ttk.Button(buttons_frame, text="Dodaj dyscypline", width=25, padding=20, bootstyle=OUTLINE, command=lambda: show_add_discipline_window(root))
-    team_button = ttk.Button(buttons_frame, text="Dodaj drużynę", width=25, padding=20, bootstyle=OUTLINE, command=lambda: show_add_team_window(root))
-    player_button = ttk.Button(buttons_frame, text="Dodaj zawodnika", width=25, padding=20, bootstyle=OUTLINE, command=lambda: show_add_player_window(root))
+    city_button = ttk.Button(buttons_frame, text="Dodaj miasto", width=25, padding=20, bootstyle=(INFO, OUTLINE), command=lambda: show_add_city_window(root))
+    country_button = ttk.Button(buttons_frame, text="Dodaj państwo", width=25, padding=20, bootstyle=(INFO, OUTLINE), command=lambda: show_add_country_window(root))
+    discipline_button = ttk.Button(buttons_frame, text="Dodaj dyscypline", width=25, padding=20, bootstyle=(INFO, OUTLINE), command=lambda: show_add_discipline_window(root))
+    team_button = ttk.Button(buttons_frame, text="Dodaj drużynę", width=25, padding=20, bootstyle=(INFO, OUTLINE), command=lambda: show_add_team_window(root))
+    player_button = ttk.Button(buttons_frame, text="Dodaj zawodnika", width=25, padding=20, bootstyle=(INFO, OUTLINE), command=lambda: show_add_player_window(root))
+
+    team_player_button = ttk.Button(buttons_frame, text="Dodaj zawodnika do drużyny", width=25, padding=20, bootstyle=(DANGER, OUTLINE), command=lambda: show_add_team_player_window(root))
+    game_team_button = ttk.Button(buttons_frame, text="Dodaj drużyne do meczu", width=25, padding=20, bootstyle=(DANGER, OUTLINE), command=lambda: show_add_game_team_window(root))
+
     game_button = ttk.Button(buttons_frame, text="Dodaj mecz", width=55, padding=20, bootstyle=(WARNING, OUTLINE), command=lambda: show_add_game_window(root))
+
     score_button = ttk.Button(buttons_frame, text="Ogłoś wynik meczu", width=55, padding=20, bootstyle=(SUCCESS, OUTLINE), command=lambda: show_add_score_window(root))
 
     # Grid layout for the buttons
@@ -171,8 +177,13 @@ def show_admin_panel(username):
     discipline_button.grid(row=0, column=2, rowspan=2, padx=5, pady=5, sticky="w")
     team_button.grid(row=1, column=0, padx=5, pady=5, sticky="w")
     player_button.grid(row=1, column=1, padx=5, pady=5, sticky="w")
-    game_button.grid(row=2, column=0, columnspan=3, padx=5, pady=5, sticky="w")
-    score_button.grid(row=5, column=0, columnspan=3, padx=5, pady=100, sticky="w")
+
+    team_player_button.grid(row=3, column=0, padx=5, pady=25, sticky="w")
+    game_team_button.grid(row=3, column=1, padx=5, pady=25, sticky="w")
+
+    game_button.grid(row=5, column=0, columnspan=3, padx=5, pady=5, sticky="w")
+
+    score_button.grid(row=7, column=0, columnspan=3, padx=5, pady=25, sticky="w")
 
 
 # Widok panelu użytkkownika
@@ -263,13 +274,17 @@ def show_user_panel(username):
 
     mecze_inner_frame.bind("<Configure>", lambda e: mecze_canvas.configure(scrollregion=mecze_canvas.bbox("all")))
 
-    mecze = database.mysql_select(table="game g", column="g.game_name, t1.team_name AS team1_name, t2.team_name AS team2_name, c.country_name, ci.city_name, d.discipline_name, g.game_date", conditions=f"JOIN game_team gt1 ON g.id = gt1.game_id JOIN game_team gt2 ON g.id = gt2.game_id AND gt1.team_id != gt2.team_id JOIN team t1 ON gt1.team_id = t1.id JOIN team t2 ON gt2.team_id = t2.id JOIN country c ON g.country_id = c.id JOIN city ci ON g.city_id = ci.id JOIN discipline d ON g.discipline_id = d.id")
+    mecze = database.mysql_select(
+        table="game g JOIN game_team gt1 ON g.id = gt1.game_id JOIN team t1 ON gt1.team_id = t1.id JOIN game_team gt2 ON g.id = gt2.game_id JOIN team t2 ON gt2.team_id = t2.id AND t1.id < t2.id JOIN country c ON g.country_id = c.id JOIN city ci ON g.city_id = ci.id JOIN discipline d ON g.discipline_id = d.id",
+        column="g.game_name, t1.team_name AS team1_name, t2.team_name AS team2_name, c.country_name, ci.city_name, d.discipline_name, g.game_date",
+        multiple="yes"
+    )
 
     # Dodawanie kart meczów
     for mecz in mecze:
         match_name, team_1, team_2, country, city, discipline, date = mecz
         card = MatchCard(mecze_inner_frame, match_name, team_1, team_2, country, city, discipline, date)
-        card.pack(pady=5, fill=ttk.X)
+        card.pack(pady=10, fill=ttk.X)
 
     mecze_canvas.update_idletasks()
     mecze_canvas.configure(scrollregion=mecze_canvas.bbox("all"))

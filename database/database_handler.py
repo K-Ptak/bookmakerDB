@@ -29,7 +29,7 @@ class DatabasePointer:
             return mydb
 
     @staticmethod
-    def mysql_select(column="", table="", conditions=""):
+    def mysql_select(column="", table="", conditions="", multiple=""):
         dbcursor = DatabasePointer.db.cursor()
         if column and table and conditions:
             dbcursor.execute(f"SELECT {column} FROM {table} {conditions}")
@@ -40,8 +40,12 @@ class DatabasePointer:
         else:
             return "mysql_select Error!"
 
-        result = [item[0] for item in dbcursor.fetchall()]
-        return result
+        if multiple:
+            result = dbcursor.fetchall()
+            return result
+        else:
+            result = [item[0] for item in dbcursor.fetchall()]
+            return result
 
     @staticmethod
     def mysql_insert(table, columns, values, params):
