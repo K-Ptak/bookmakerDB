@@ -1,4 +1,6 @@
 from ttkbootstrap import Style, OUTLINE, INFO, WARNING, SECONDARY
+
+from database.user_panel_logic import show_add_bet_window, show_team_players_window
 from model.betcard import BetCard
 from model.matchcard import MatchCard
 from view.registration import *
@@ -237,13 +239,17 @@ def show_user_panel(username):
     zaklady_inner_frame = ttk.Frame(canvas)
     canvas.create_window((0, 0), window=zaklady_inner_frame, anchor=ttk.NW)
 
-    zaklady_user = database.mysql_select(table="user u",
-                                         column="g.game_name, b.bet_value, sc.score_value, r.result_name, b.bet_created_at",
-                                         conditions=f"JOIN bet b ON u.id = b.user_id JOIN game g ON b.game_id = g.id JOIN score sc ON b.score_id = sc.id JOIN result r ON b.result_id = r.id WHERE u.user_login = '{username}'")
+    user_id = database.mysql_select(table="user", column="id", conditions=f"WHERE user_login = '{username}'")
+    user_id = user_id[0]
+
+    zaklady_user = database.mysql_select(table="bet b JOIN game g ON b.game_id = g.id JOIN score s ON b.score_id = s.id JOIN result r ON b.result_id = r.id",
+                                     column="g.game_name, b.bet_value, s.score_value, r.result_name, b.bet_created_at",
+                                     conditions=f"WHERE b.user_id = {user_id}",
+                                     multiple="yes")
 
     for zaklad in zaklady_user:
-        game_name, bet_value, bet_result, bet_status, bet_date = zaklad
-        card = BetCard(zaklady_inner_frame, game_name, bet_value, bet_result, bet_status, bet_date)
+        game_name, bet_value, bet_score, bet_status, bet_date = zaklad
+        card = BetCard(zaklady_inner_frame, game_name, bet_value, bet_score, bet_status, bet_date)
         card.pack(pady=20, fill="x", expand=1)
 
     canvas.update_idletasks()
@@ -288,6 +294,19 @@ def show_user_panel(username):
 
     mecze_canvas.update_idletasks()
     mecze_canvas.configure(scrollregion=mecze_canvas.bbox("all"))
+
+    buttons_frame = ttk.Frame(left_column)
+    buttons_frame.pack()
+
+    # Create the buttons for the desired layout
+    zaklad_button = ttk.Button(buttons_frame, text="Zrób nowy zakład", width=25, padding=20, bootstyle=(WARNING, OUTLINE),
+                             command=lambda: show_add_bet_window(balance, username, root))
+    team_button = ttk.Button(buttons_frame, text="Wyświetl zawodników drużyny", width=25, padding=20, bootstyle=(SUCCESS, OUTLINE),
+                                command=lambda: show_team_players_window(root))
+
+    # Grid layout for the buttons
+    zaklad_button.grid(row=0, column=0, padx=5, pady=15, sticky="w")
+    team_button.grid(row=1, column=0, padx=5, pady=15, sticky="w")
 
 
 # Funkcja do czyszczenia okna

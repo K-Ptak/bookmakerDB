@@ -2,14 +2,14 @@ import ttkbootstrap as ttk
 
 
 class BetCard(ttk.Frame):
-    def __init__(self, parent, game_name, bet_value, bet_result, bet_status, bet_date):
+    def __init__(self, parent, game_name, bet_value, bet_score, bet_status, bet_date):
         super().__init__(parent, relief=ttk.SOLID)
 
         game_label = ttk.Label(self, text=game_name, font=("Arial", 12, "bold"))
         game_label.pack(anchor=ttk.W)
 
-        result_label = ttk.Label(self, text=bet_result, font=("Arial", 12, "bold"))
-        result_label.pack(anchor=ttk.W)
+        score_label = ttk.Label(self, text=f"Obstawiony wynik: {bet_score}", font=("Arial", 10, "bold"))
+        score_label.pack(anchor=ttk.W)
 
         value_label = ttk.Label(self, text=f"Kwota: {bet_value}")
         value_label.pack(anchor=ttk.W)
