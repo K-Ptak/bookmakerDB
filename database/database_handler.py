@@ -24,11 +24,12 @@ class DatabasePointer:
             )
         except:
             print("Cannot connect to database")
+            quit()
         else:
             return mydb
 
     @staticmethod
-    def mysql_select(column="", table="", conditions=""):
+    def mysql_select(column="", table="", conditions="", multiple=""):
         dbcursor = DatabasePointer.db.cursor()
         if column and table and conditions:
             dbcursor.execute(f"SELECT {column} FROM {table} {conditions}")
@@ -39,14 +40,30 @@ class DatabasePointer:
         else:
             return "mysql_select Error!"
 
-        result = dbcursor.fetchall()
-        return result
+        if multiple:
+            result = dbcursor.fetchall()
+            return result
+        else:
+            result = [item[0] for item in dbcursor.fetchall()]
+            return result
 
     @staticmethod
-    def mysql_insert(table, columns, values):
-        if table and columns and values:
+    def mysql_insert(table, columns, values, params):
+        if table and columns and values and params:
             dbcursor = DatabasePointer.db.cursor()
-            dbcursor.execute(f"INSERT INTO {table}({columns}) VALUES ({values})")
+            query = f"INSERT INTO {table}({columns}) VALUES ({values})"
+            dbcursor.execute(query, params)
+            DatabasePointer.db.commit()
+            return "Insert operation successful"
+        else:
+            return "mysql_insert Error!"
+
+    @staticmethod
+    def mysql_update(table, values, conditions):
+        if table and values and values and conditions:
+            dbcursor = DatabasePointer.db.cursor()
+            query = f"UPDATE {table} SET {values} WHERE {conditions}"
+            dbcursor.execute(query)
             DatabasePointer.db.commit()
             return "Insert operation successful"
         else:
