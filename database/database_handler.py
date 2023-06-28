@@ -11,6 +11,7 @@ class DatabasePointer:
         data = f.readline()
         data = decrypt_value(data, "storage/enckey.key")
         DatabasePointer.credentials = data.decode().split('\r\n')
+        print(DatabasePointer.credentials)
         DatabasePointer.db = self.mysql_connect()
 
     @staticmethod
